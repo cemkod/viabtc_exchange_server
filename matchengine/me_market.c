@@ -1027,6 +1027,9 @@ static int trigger_sell_stop_orders(bool real, market_t *m)
         if (mpd_cmp(m->last_price, order->trigger, &mpd_ctx) >= 0) {
             break;
         }
+        if (real) {
+            push_order_message(ORDER_EVENT_FINISH, order, m);
+        }
         if (order->type == MARKET_ORDER_TYPE_STOP_MARKET) {
             ret = put_market_order(real, &result, m, order->user_id, MARKET_ORDER_SIDE_ASK, order->amount, order->taker_fee, order->source);
         } else {
@@ -1053,6 +1056,9 @@ static int trigger_buy_stop_orders(bool real, market_t *m)
         order_t *order = node->value;
         if (mpd_cmp(m->last_price, order->trigger, &mpd_ctx) <= 0) {
             break;
+        }
+        if (real) {
+            push_order_message(ORDER_EVENT_FINISH, order, m);
         }
         if (order->type == MARKET_ORDER_TYPE_STOP_MARKET) {
             ret = put_market_order(real, &result, m, order->user_id, MARKET_ORDER_SIDE_BID, order->amount, order->taker_fee, order->source);
