@@ -1078,8 +1078,11 @@ static int trigger_buy_stop_orders(bool real, market_t *m)
 
 int market_put_stop_market_order(bool real, json_t **result, market_t *m, uint32_t user_id, uint32_t side, mpd_t *trigger, mpd_t *amount, mpd_t *taker_fee, const char *source)
 {
+    if (m->last_price->len == 0) {
+        return -102;
+    }
     if (side == MARKET_ORDER_SIDE_ASK) {
-        if (m->last_price->len == 0 || mpd_cmp(trigger, m->last_price, &mpd_ctx) >= 0) {
+        if (mpd_cmp(trigger, m->last_price, &mpd_ctx) >= 0) {
             return -101;
         }
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->stock);
@@ -1090,7 +1093,7 @@ int market_put_stop_market_order(bool real, json_t **result, market_t *m, uint32
             return -2;
         }
     } else {
-        if (m->last_price->len == 0 || mpd_cmp(trigger, m->last_price, &mpd_ctx) <= 0) {
+        if (mpd_cmp(trigger, m->last_price, &mpd_ctx) <= 0) {
             return -101;
         }
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->money);
@@ -1165,8 +1168,11 @@ int market_put_stop_market_order(bool real, json_t **result, market_t *m, uint32
 
 int market_put_stop_limit_order(bool real, json_t **result, market_t *m, uint32_t user_id, uint32_t side, mpd_t *trigger, mpd_t *amount, mpd_t *price, mpd_t *taker_fee, mpd_t *maker_fee, const char *source)
 {
+    if (m->last_price->len == 0) {
+        return -102;
+    }
     if (side == MARKET_ORDER_SIDE_ASK) {
-        if (m->last_price->len == 0 || mpd_cmp(trigger, m->last_price, &mpd_ctx) >= 0) {
+        if (mpd_cmp(trigger, m->last_price, &mpd_ctx) >= 0) {
             return -101;
         }
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->stock);
@@ -1177,7 +1183,7 @@ int market_put_stop_limit_order(bool real, json_t **result, market_t *m, uint32_
             return -2;
         }
     } else {
-        if (m->last_price->len == 0 || mpd_cmp(trigger, m->last_price, &mpd_ctx) <= 0) {
+        if (mpd_cmp(trigger, m->last_price, &mpd_ctx) <= 0) {
             return -101;
         }
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->money);

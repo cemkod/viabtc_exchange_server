@@ -425,6 +425,8 @@ static int on_cmd_order_put_stop_market(nw_ses *ses, rpc_pkg *pkg, json_t *param
         return reply_error(ses, pkg, 11, "amount too small");
     } else if (ret == -101) {
         return reply_error(ses, pkg, 101, "stop price outside market price");
+    } else if (ret == -102) {
+        return reply_error(ses, pkg, 102, "market price has not yet been initialized");
     } else if (ret < 0) {
         log_fatal("market_put_stop_market_order fail: %d", ret);
         return reply_error_internal_error(ses, pkg);
@@ -534,6 +536,8 @@ static int on_cmd_order_put_stop_limit(nw_ses *ses, rpc_pkg *pkg, json_t *params
         return reply_error(ses, pkg, 11, "amount too small");
     } else if (ret == -101) {
         return reply_error(ses, pkg, 101, "stop price outside market price");
+    } else if (ret == -102) {
+        return reply_error(ses, pkg, 102, "market price has not yet been initialized");
     } else if (ret < 0) {
         log_fatal("market_put_stop_limit_order fail: %d", ret);
         return reply_error_internal_error(ses, pkg);
