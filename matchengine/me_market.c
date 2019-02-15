@@ -1027,6 +1027,9 @@ static int trigger_sell_stop_orders(bool real, market_t *m)
         if (mpd_cmp(m->last_price, order->trigger, &mpd_ctx) >= 0) {
             break;
         }
+        if (real) {
+            push_order_message(ORDER_EVENT_FINISH, order, m);
+        }
         if (order->type == MARKET_ORDER_TYPE_STOP_MARKET) {
             ret = put_market_order(real, &result, m, order->user_id, MARKET_ORDER_SIDE_ASK, order->amount, order->taker_fee, order->source);
         } else {
@@ -1054,6 +1057,9 @@ static int trigger_buy_stop_orders(bool real, market_t *m)
         if (mpd_cmp(m->last_price, order->trigger, &mpd_ctx) <= 0) {
             break;
         }
+        if (real) {
+            push_order_message(ORDER_EVENT_FINISH, order, m);
+        }
         if (order->type == MARKET_ORDER_TYPE_STOP_MARKET) {
             ret = put_market_order(real, &result, m, order->user_id, MARKET_ORDER_SIDE_BID, order->amount, order->taker_fee, order->source);
         } else {
@@ -1072,8 +1078,11 @@ static int trigger_buy_stop_orders(bool real, market_t *m)
 
 int market_put_stop_market_order(bool real, json_t **result, market_t *m, uint32_t user_id, uint32_t side, mpd_t *trigger, mpd_t *amount, mpd_t *taker_fee, const char *source)
 {
+    if (m->last_price->len == 0) {
+        return -102;
+    }
     if (side == MARKET_ORDER_SIDE_ASK) {
-        if (m->last_price->len == 0 || mpd_cmp(trigger, m->last_price, &mpd_ctx) >= 0) {
+        if (mpd_cmp(trigger, m->last_price, &mpd_ctx) >= 0) {
             return -101;
         }
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->stock);
@@ -1084,7 +1093,7 @@ int market_put_stop_market_order(bool real, json_t **result, market_t *m, uint32
             return -2;
         }
     } else {
-        if (m->last_price->len == 0 || mpd_cmp(trigger, m->last_price, &mpd_ctx) <= 0) {
+        if (mpd_cmp(trigger, m->last_price, &mpd_ctx) <= 0) {
             return -101;
         }
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->money);
@@ -1159,8 +1168,11 @@ int market_put_stop_market_order(bool real, json_t **result, market_t *m, uint32
 
 int market_put_stop_limit_order(bool real, json_t **result, market_t *m, uint32_t user_id, uint32_t side, mpd_t *trigger, mpd_t *amount, mpd_t *price, mpd_t *taker_fee, mpd_t *maker_fee, const char *source)
 {
+    if (m->last_price->len == 0) {
+        return -102;
+    }
     if (side == MARKET_ORDER_SIDE_ASK) {
-        if (m->last_price->len == 0 || mpd_cmp(trigger, m->last_price, &mpd_ctx) >= 0) {
+        if (mpd_cmp(trigger, m->last_price, &mpd_ctx) >= 0) {
             return -101;
         }
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->stock);
@@ -1171,7 +1183,7 @@ int market_put_stop_limit_order(bool real, json_t **result, market_t *m, uint32_
             return -2;
         }
     } else {
-        if (m->last_price->len == 0 || mpd_cmp(trigger, m->last_price, &mpd_ctx) <= 0) {
+        if (mpd_cmp(trigger, m->last_price, &mpd_ctx) <= 0) {
             return -101;
         }
         mpd_t *balance = balance_get(user_id, BALANCE_TYPE_AVAILABLE, m->money);
@@ -1262,9 +1274,9 @@ int market_put_limit_order(bool real, json_t **result, market_t *m, uint32_t use
     
     int change;
     if (initial_price->len != 0 && (change = mpd_cmp(m->last_price, initial_price, &mpd_ctx)) != 0) {
-        if (side == MARKET_ORDER_SIDE_ASK && change < 0) {
+        if (change < 0) {
             ret = trigger_sell_stop_orders(real, m);
-        } else if (side == MARKET_ORDER_SIDE_BID && change > 0) {
+        } else {
             ret = trigger_buy_stop_orders(real, m);
         }
         if (ret < 0) {
@@ -1331,9 +1343,9 @@ int market_put_market_order(bool real, json_t **result, market_t *m, uint32_t us
 
     int change;
     if (initial_price->len != 0 && (change = mpd_cmp(m->last_price, initial_price, &mpd_ctx)) != 0) {
-        if (side == MARKET_ORDER_SIDE_ASK && change < 0) {
+        if (change < 0) {
             ret = trigger_sell_stop_orders(real, m);
-        } else if (side == MARKET_ORDER_SIDE_BID && change > 0) {
+        } else {
             ret = trigger_buy_stop_orders(real, m);
         }
         if (ret < 0) {
