@@ -1274,9 +1274,9 @@ int market_put_limit_order(bool real, json_t **result, market_t *m, uint32_t use
     
     int change;
     if (initial_price->len != 0 && (change = mpd_cmp(m->last_price, initial_price, &mpd_ctx)) != 0) {
-        if (side == MARKET_ORDER_SIDE_ASK && change < 0) {
+        if (change < 0) {
             ret = trigger_sell_stop_orders(real, m);
-        } else if (side == MARKET_ORDER_SIDE_BID && change > 0) {
+        } else {
             ret = trigger_buy_stop_orders(real, m);
         }
         if (ret < 0) {
@@ -1343,9 +1343,9 @@ int market_put_market_order(bool real, json_t **result, market_t *m, uint32_t us
 
     int change;
     if (initial_price->len != 0 && (change = mpd_cmp(m->last_price, initial_price, &mpd_ctx)) != 0) {
-        if (side == MARKET_ORDER_SIDE_ASK && change < 0) {
+        if (change < 0) {
             ret = trigger_sell_stop_orders(real, m);
-        } else if (side == MARKET_ORDER_SIDE_BID && change > 0) {
+        } else {
             ret = trigger_buy_stop_orders(real, m);
         }
         if (ret < 0) {
